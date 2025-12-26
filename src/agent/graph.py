@@ -38,7 +38,8 @@ def route_after_critic(state: State):
     else:
         return "planner"
 
-builder.add_conditional_edges("planner",
+builder.add_edge("planner","critic")
+builder.add_conditional_edges("critic",
                               route_after_critic,
                               ["planner", "END"])
 

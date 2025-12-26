@@ -7,17 +7,27 @@ from src.agent.state import State
 class IntentRouterNode:
     """意图识别节点：根据用户输入分类意图，写回到 State.intent"""
 
+    ALLOWED_INTENTS = {
+        "qa","task","analysis"
+    }
+
     def run(self, state: State) -> dict:
-        # 将当前用户输入包装成对话消息传给 LLM
-        messages = [HumanMessage(content=state.user_query)]
-        # prompt 中占位的是 {messages}
-        response = assistant_runnable.invoke({"messages": messages})
+        try:
+            # 将当前用户输入包装成对话消息传给 LLM
+            messages = [HumanMessage(content=state.user_query)]
+            response = assistant_runnable.invoke({"messages": messages})
+            # LangChain ChatOpenAI 返回 ChatMessage / AIMessage
+            intent_text = getattr(response, "content", str(response)).strip()
 
-        # LangChain ChatOpenAI 返回 ChatMessage / AIMessage
-        intent_text = getattr(response, "content", str(response)).strip()
+        except Exception as e:
+            state.memory["intent_error"] = str(e)
+            return {"intent":"qa"}
 
-        # 更新状态中的意图字段
-        state.intent = intent_text
+        # 兜底裁剪
+        intent_text = intent_text.split()[0]
+        intent_text = intent_text.replace('"', '').replace("'", "")
+        if intent_text not in self.ALLOWED_INTENTS:
+            intent_text = "qa"
 
-        # LangGraph 节点返回一个对状态的增量更新
+        # 状态增量更新
         return {"intent": intent_text}

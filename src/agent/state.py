@@ -10,13 +10,13 @@ class ToolCall(BaseModel):
     error: Optional[str] = None   # 异常信息
 
 class State(BaseModel):
-    trace_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     # 用户输入
     user_query: str
     # 意图与计划
     intent: Optional[str] = None         # IntentRouter 输出
     plan: Optional[List[str]] = None     # Planner 输出计划步骤
     # RAG / 检索结果
+    need_retrieval: Optional[bool] = True  # 是否需要检索
     retrieved_docs: Optional[List[str]] = None
     # 工具调用记录
     tool_calls: List[ToolCall] = []

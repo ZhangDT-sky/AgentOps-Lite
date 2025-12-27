@@ -28,6 +28,7 @@ class PlannerNode:
         response = planner_runnable.invoke(
             {"intent": intent, "user_query": user_query},
         )
+        print(f"初始生成步骤：{response}")
         return getattr(response, "content", str(response)).strip()
 
     def _parse_plan(self, plan_text: str) -> List[str]:

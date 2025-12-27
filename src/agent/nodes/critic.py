@@ -11,7 +11,7 @@ class CriticNode:
     def run(self,state: State) -> dict:
         # 检查是否生成了草稿答案
         if not state.draft_answer or not state.draft_answer.strip():
-            return self.handle_retry(
+            return self._handle_retry(
                 state,
                 reason="答案为空"
             )
@@ -47,7 +47,7 @@ class CriticNode:
 
 
 
-    def handle_retry(self, state, reason):
+    def _handle_retry(self, state, reason):
         """
         统一处理重试/失败逻辑
         """

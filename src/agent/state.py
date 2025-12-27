@@ -1,13 +1,25 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 import uuid
+from datetime import datetime
 
 class ToolCall(BaseModel):
+    """工具调用记录（用于 State.tool_calls）"""
     name: str                     # 工具名称
-    input_params: dict            # 调用参数
+    input_params: dict            # 调用参数（已校验）
     output: Optional[str] = None  # 工具输出
     success: bool = True          # 调用是否成功
     error: Optional[str] = None   # 异常信息
+    timestamp: Optional[datetime] = Field(default_factory=datetime.now)  # 调用时间
+
+class ToolObservation(BaseModel):
+    """工具执行观察（用于 ReAct 循环）"""
+    tool: str                     # 工具名称
+    args: Dict[str, Any]          # 调用参数
+    result: Any                   # 执行结果
+    success: bool                 # 是否成功
+    error: Optional[str] = None   # 错误信息
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 class State(BaseModel):
     # 用户输入
@@ -17,9 +29,11 @@ class State(BaseModel):
     plan: Optional[List[str]] = None     # Planner 输出计划步骤
     # RAG / 检索结果
     need_retrieval: Optional[bool] = True  # 是否需要检索
-    retrieved_docs: Optional[List[str]] = None
+    retrieved_docs: Optional[List[str]] = None # 检索结果
     # 工具调用记录
     tool_calls: List[ToolCall] = []
+    # Tool Execution Trace（用于 ReAct / Critic / Planner 观察）
+    observations: List[ToolObservation] = Field(default_factory=list)
     # 草稿答案
     draft_answer: Optional[str] = None
     # 重试控制

@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from src.agent.state import State, ToolCall
 from src.tools.tool_registry import tool_registry
 
-class ToolExecution:
+class ToolExecutionNode:
     """
     工具执行节点：Agent 级工具调用执行器
     """
@@ -133,6 +133,8 @@ class ToolExecution:
         for key, value in matches:
             normal_key = self._normalize_param_name(key, tool_name)
             params[normal_key] = value.strip().strip('"').strip("'")
+        
+        return params
 
     def _normalize_param_name(self, param_name: str, tool_name: str) -> str:
         """标准化参数名称（中英文映射）"""
@@ -173,7 +175,6 @@ class ToolExecution:
         """
         tool_name = tool_call_info["tool_name"]
         params = tool_call_info["params"]
-        step_text = tool_call_info["step_text"]
 
         tool_call = ToolCall(
             name=tool_name,

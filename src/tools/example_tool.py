@@ -1,7 +1,6 @@
-from dataclasses import Field
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.agent.state import State
 

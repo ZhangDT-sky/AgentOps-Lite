@@ -8,6 +8,7 @@ from src.agent.nodes.critic import CriticNode
 from src.agent.nodes.draft_answer import DraftAnswerNode
 from src.agent.nodes.retrieval import RetrievalNode
 from src.agent.nodes.retrieval_decision import RetrievalDecisionNode
+from src.agent.nodes.tool_execution import ToolExecutionNode
 
 # 构建状态图
 builder = StateGraph(State)
@@ -19,6 +20,7 @@ critic_node = CriticNode()
 draft_answer_node = DraftAnswerNode()
 retrieval_node = RetrievalNode()
 retrieval_decision_node = RetrievalDecisionNode()
+tool_execution_node = ToolExecutionNode()
 
 
 builder.add_node("intent_router", intent_router_node.run)
@@ -27,11 +29,14 @@ builder.add_node("critic", critic_node.run)
 builder.add_node("draft_answer", draft_answer_node.run)
 builder.add_node("retrieval", retrieval_node.run)
 builder.add_node("retrieval_decision", retrieval_decision_node.run)
+builder.add_node("tool_execution", tool_execution_node.run)
 
 builder.add_edge(START,"intent_router")
 builder.add_edge("intent_router","planner")
 builder.add_edge("planner","retrieval_decision")
-builder.add_edge("retrieval","draft_answer")
+
+builder.add_edge("retrieval","tool_execution")
+builder.add_edge("tool_execution","draft_answer")
 builder.add_edge("draft_answer","critic")
 
 
@@ -60,11 +65,12 @@ def route_after_retrieval(state: State):
     if decision:
         return "retrieval"
     else:
-        return "draft_answer"
+        # 不需要检索时，直接执行工具（如果有工具调用）
+        return "tool_execution"
 
 builder.add_conditional_edges("retrieval_decision",
                               route_after_retrieval,
-                              ["retrieval", "draft_answer"])
+                              ["retrieval", "tool_execution"])
 
 # 编译得到可运行的图
 graph = builder.compile()

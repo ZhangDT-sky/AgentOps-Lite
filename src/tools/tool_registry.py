@@ -89,26 +89,6 @@ class ToolRegistry:
     ):
         """
         装饰器：注册工具
-        
-        Args:
-            name: 工具名称（唯一标识）
-            description: 工具描述（用于 LLM Function Calling）
-            input_model: Pydantic BaseModel，严格定义工具参数
-            
-        使用示例：
-            class WeatherInput(BaseModel):
-                city: str
-                date: Optional[str] = None
-            
-            @tool_registry.register(
-                name="get_weather",
-                description="查询城市天气",
-                input_model=WeatherInput
-            )
-            def get_weather(state: State, args: WeatherInput) -> str:
-                result = ...
-                # 工具执行会自动记录到 state.observations
-                return result
         """
         def decorator(func: Callable[[State, BaseModel], Any]):
             # 验证函数签名
@@ -145,18 +125,12 @@ class ToolRegistry:
     def get_openai_schemas(self) -> list[Dict[str, Any]]:
         """
         获取所有工具的 OpenAI Function Calling Schema
-        
-        Returns:
-            OpenAI Function Calling 格式的工具列表
         """
         return [tool.to_openai_schema() for tool in self._tools.values()]
     
     def get_langchain_schemas(self) -> list[Dict[str, Any]]:
         """
         获取所有工具的 LangChain Tool Schema
-        
-        Returns:
-            LangChain Tool 格式的工具列表
         """
         return [tool.to_langchain_tool_schema() for tool in self._tools.values()]
     

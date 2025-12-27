@@ -3,32 +3,33 @@ from src.agent.state import State
 
 class DraftAnswerNode:
     def run(self, state: State):
+        draft_answer = None
         try:
             if not state.plan:
-                state.draft_answer = (
+                draft_answer = (
                     f"无法生成执行计划，直接回答用户问题：{state.user_query}"
                 )
-                return state
-            if state.intent == "qa":
-                state.draft_answer = self._generate_qa_answer(state)
+            elif state.intent == "qa":
+                draft_answer = self._generate_qa_answer(state)
 
             elif state.intent == "task":
-                state.draft_answer = self._generate_task_answer(state)
+                draft_answer = self._generate_task_answer(state)
 
             elif state.intent == "analysis":
-                state.draft_answer = self._generate_analysis_answer(state)
+                draft_answer = self._generate_analysis_answer(state)
             else:
-                state.draft_answer = (
+                draft_answer = (
                     f"收到用户请求：{state.user_query}\n"
                     f"已生成初步计划：{state.plan}"
                 )
 
         except Exception as e:
             # 任何异常都不要抛出，交给 Critic 决策
-            state.draft_answer = None
+            draft_answer = None
             state.memory["draft_error"] = str(e)
 
-        return state
+        # 修复：返回字典而不是整个 state 对象
+        return {"draft_answer": draft_answer}
 
     def _generate_qa_answer(self, state) -> str:
         return (

@@ -30,7 +30,6 @@ class RetrievalDecisionNode:
             state.memory["retrieval_decision_error"] = str(e)
             need_retrieval = True
 
-        state.need_retrieval = need_retrieval
         return {"need_retrieval": need_retrieval}
 
     def _parse_bool(self, text: str) -> bool:

@@ -31,7 +31,6 @@ builder.add_node("retrieval_decision", retrieval_decision_node.run)
 builder.add_edge(START,"intent_router")
 builder.add_edge("intent_router","planner")
 builder.add_edge("planner","retrieval_decision")
-builder.add_edge("retrieval_decision","retrieval")
 builder.add_edge("retrieval","draft_answer")
 builder.add_edge("draft_answer","critic")
 
@@ -57,8 +56,8 @@ builder.add_conditional_edges("critic",
                               ["planner", END])
 
 def route_after_retrieval(state: State):
-    decision = getattr(state,"need_retrieval","true")
-    if decision == "true":
+    decision = getattr(state,"need_retrieval",True)
+    if decision:
         return "retrieval"
     else:
         return "draft_answer"

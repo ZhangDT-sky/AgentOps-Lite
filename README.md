@@ -1,11 +1,18 @@
-AgentOps-Lite：全能力覆盖设计方案
-一、项目目标
 
-让 LLM / Agent 在复杂任务下可控、可观测、可恢复，支持多模型、多工具、多知识源，并具备生产级后端工程能力。
+---
 
-面向企业内部知识问答、任务自动化、技术支持等场景
+# AgentOps-Lite：设计方案
 
-解决不可控、黑盒、工具失败、上下文过长、RAG 滥用等问题
+## 一、项目目标
+
+> **让 LLM / Agent 在复杂任务下可控、可观测、可恢复，支持多模型、多工具、多知识源，并具备生产级后端工程能力。**
+
+* 面向企业内部知识问答、任务自动化、技术支持等场景
+* 解决不可控、黑盒、工具失败、上下文过长、RAG 滥用等问题
+
+---
+
+## 二、项目结构（对应 8 个能力点）
 
 ```
 agentops_lite/
@@ -49,7 +56,9 @@ agentops_lite/
 └─ README.md
 ```
 
+---
 
+## 三、模块与能力点映射
 
 | 能力点            | 对应模块 / Node                                        | 实现要点                                                                   |
 | -------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -61,3 +70,53 @@ agentops_lite/
 | **RAG 系统**     | `retrieval_decision.py` + `retrieval.py`           | 决策是否检索，Query Rewrite，检索失败 fallback，Agent 与向量库耦合                        |
 | **后端系统工程能力**   | `api/` + `services/`                               | FastAPI、async/await、缓存（Redis）、数据库（PostgreSQL）、队列（可选），长任务并发控制、限流、降级     |
 | **可靠性与可观测性**   | `critic.py` + `logging_service.py`                 | trace_id、节点级日志、retry 策略、最大执行步数，支持 eval 分析和 debug                       |
+
+---
+
+## 四、落地实现思路
+
+1. **Graph + Node**
+
+   * 每个 Node 只处理自己职责，修改 AgentState 对应字段
+   * Critic Node 判断失败并触发 retry
+   * Graph Executor 顺序执行 Node + 异常捕获
+
+2. **LLM 调用抽象**
+
+   * llm_client.py 支持不同 Provider 切换
+   * Planner 用高推理模型，Critic 用低成本模型
+   * 支持 retry 和超时
+
+3. **工具系统**
+
+   * Tool Registry 管理所有可调用工具
+   * schema 校验参数
+   * 调用失败记录而非直接抛异常
+
+4. **RAG 系统**
+
+   * 决策是否触发检索
+   * Query Rewrite → 向量库检索 → 文档摘要
+   * 检索失败 fallback
+
+5. **状态管理**
+
+   * AgentState + Redis / PostgreSQL
+   * 短期内存用于执行上下文
+   * 长期内存用于历史问答或任务记录
+
+6. **后端工程能力**
+
+   * FastAPI 接口 + async
+   * 并发控制，队列执行长任务
+   * 日志与 trace 保存
+
+7. **可靠性与可观测性**
+
+   * trace_id 贯穿整个 Graph
+   * 节点级日志记录输入/输出
+   * Critic 节点 retry、最大步数限制
+   * Eval 模块统计 Agent 成功率 / 错误类型
+
+---
+

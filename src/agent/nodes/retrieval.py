@@ -14,23 +14,11 @@ class RetrievalNode:
     """
     
     def __init__(self, top_k: int = 5):
-        """
-        初始化检索节点
-        
-        Args:
-            top_k: 检索返回的文档数量
-        """
         self.top_k = top_k
     
     def run(self, state: State) -> dict:
         """
         执行向量检索
-        
-        Args:
-            state: Agent 状态
-            
-        Returns:
-            状态增量更新：{"retrieved_docs": List[str]}
         """
         # 检查是否需要检索
         if state.need_retrieval is False:
